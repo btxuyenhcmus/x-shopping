@@ -1,0 +1,38 @@
+version: '3'
+services:
+  django:
+    container_name: django
+    build: .
+    image: btxuyenhcmus/x-shopping
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/x-shopping
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    networks:
+      - postgres-net
+  postgres:
+    container_name: postgres
+    image: mdillon/postgis
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - postgresdb:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - postgres-net
+
+volumes:
+  postgresdb:
+
+networks:
+  postgres-net:
+    driver: bridge
