@@ -18,6 +18,25 @@ build:
     - docker pull $CI_REGISTRY_IMAGE:latest || true
     - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  only:
+    changes:
+      - Dockerfile
+      - requirements.txt
+
+release-tag:
+  variables:
+    GIT_STRATEGY: none
+  stage: release
+  except:
+    - master
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+  only:
+    changes:
+      - Dockerfile
+      - requirements.txt
 
 release-latest:
   variables:
@@ -29,6 +48,10 @@ release-latest:
     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
     - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    changes:
+      - Dockerfile
+      - requirements.txt
 
 deploy:
   stage: deploy
@@ -36,6 +59,11 @@ deploy:
     GIT_STRATEGY: none
   only:
     - master
+  except:
+    changes:
+      - .env.template
+      - .gitignore
+      - README.md
   before_script:
     - apk update && apk add openssh-client bash
   script:
@@ -63,6 +91,7 @@ deploy:
       cd ${PATH_TO_PROJECT};
       docker-compose down;
       docker pull ${CI_REGISTRY_IMAGE}:latest;
+      git pull origin master;
       docker-compose up -d;
       docker-compose restart django;
       docker image prune -f;"
