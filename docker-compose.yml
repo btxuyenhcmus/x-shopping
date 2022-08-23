@@ -1,8 +1,8 @@
 version: '3'
 services:
   django:
-    container_name: registry.gitlab.com/btxuyenhcmus/x-shopping:latest
-    image: btxuyenhcmus/x-shopping
+    container_name: django
+    image: registry.gitlab.com/btxuyenhcmus/x-shopping:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/x-shopping
