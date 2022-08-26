@@ -42,23 +42,45 @@ def cart(request, total=0, quantity=0, cart_items=None):
 def add_cart(request, product_id):
     current_user = request.user
     product = Product.objects.get(pk=product_id)
+    # Case 1: user login
     if current_user.is_authenticated:
+        # Find cart item by user and product, it not found we will create new cart item
         cart_item = CartItem.objects.create(
             product=product, user=current_user, quantity=1)
         cart_item.save()
         return redirect('cart')
+    # Case 2: user not login
+    # Find cart by session id, it not found we will create new cart
     try:
         cart = Cart.objects.get(cart_id=_cart_id(request))
     except Cart.DoesNotExist:
         cart = Cart.objects.create(cart_id=_cart_id(request))
     cart.save()
-    cart_item = CartItem.objects.create(product=product, cart=cart, quantity=1)
+    # Find exist cart item to update quantity, if not found we will create cart item
+    try:
+        cart_item = CartItem.objects.get(product=product, cart=cart)
+        cart_item.quantity += 1
+    except CartItem.DoesNotExist:
+        cart_item = CartItem.objects.create(
+            product=product, cart=cart, quantity=1)
     cart_item.save()
     return redirect('cart')
 
 
 def remove_cart(request, product_id, cart_item_id):
-    pass
+    product = get_object_or_404(Product, id=product_id)
+    try:
+        if request.user.is_authenticated:
+            return redirect('cart')
+        cart_item = CartItem.objects.get(pk=cart_item_id)
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+        else:
+            cart_item.delete()
+    except Exception as e:
+        pass
+    return redirect('cart')
 
 
 def remove_cart_item(request, cart_item_id):
