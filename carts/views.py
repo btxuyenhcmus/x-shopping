@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 
@@ -61,8 +61,10 @@ def remove_cart(request, product_id, cart_item_id):
     pass
 
 
-def remove_cart_item(request, product_id, cart_item_id):
-    pass
+def remove_cart_item(request, cart_item_id):
+    cart_item = get_object_or_404(CartItem, id=cart_item_id)
+    cart_item.delete()
+    return redirect('cart')
 
 
 @login_required(login_url='login')
