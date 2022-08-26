@@ -30,20 +30,12 @@
                                 <td>
                                     <figure class="itemside align-items-center">
                                         <div class="aside">
-                                            <img src="{{ cart_item.product.images.url }}" class="img-sm" />
+                                            <img src="{{ cart_item.product.image.url }}" class="img-sm" />
                                         </div>
                                         <figcaption class="info">
-                                            <a href="{{ cart_item.product.get_url }}" class="title text-dark">{{
-                                                cart_item.product.product_name }}</a>
-                                            <p class="text-muted small">
-                                                {% if cart_item.variations.all %}
-                                                {% for variation in cart_item.variations.all %}
-                                                {{ variation.variation_category | capfirst }}: {{
-                                                variation.variation_value }}
-                                                <br />
-                                                {% endfor %}
-                                                {% endif %}
-                                            </p>
+                                            <a href="{{ cart_item.product.get_url }}" class="title text-dark">
+                                                {{ cart_item.product.name }}
+                                            </a>
                                         </figcaption>
                                     </figure>
                                 </td>
