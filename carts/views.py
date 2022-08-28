@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from multiprocessing import context
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
@@ -94,4 +95,20 @@ def remove_cart_item(request, cart_item_id):
 
 @login_required(login_url='login')
 def checkout(request, total=0, quantity=0, cart_items=None):
-    pass
+    try:
+        cart_items = CartItem.objects.filter(user=request.user, is_active=True)
+        for cart_item in cart_items:
+            total += cart_item.product.price * cart_item.quantity
+            quantity += cart_item.quantity
+        tax = total * 2 / 100
+        grand_total = total + tax
+    except ObjectDoesNotExist:
+        pass
+    context = {
+        'total': total,
+        'quantity': quantity,
+        'cart_items': cart_items,
+        'tax': tax,
+        'grand_total': grand_total
+    }
+    return render(request, 'store/checkout.html', context=context)
