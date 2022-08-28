@@ -45,8 +45,13 @@ def add_cart(request, product_id):
     # Case 1: user login
     if current_user.is_authenticated:
         # Find cart item by user and product, it not found we will create new cart item
-        cart_item = CartItem.objects.create(
-            product=product, user=current_user, quantity=1)
+        try:
+            cart_item = CartItem.objects.get(
+                product=product, user=current_user)
+            cart_item.quantity += 1
+        except Exception as e:
+            cart_item = CartItem.objects.create(
+                product=product, user=current_user, quantity=1)
         cart_item.save()
         return redirect('cart')
     # Case 2: user not login
@@ -70,8 +75,6 @@ def add_cart(request, product_id):
 def remove_cart(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
     try:
-        if request.user.is_authenticated:
-            return redirect('cart')
         cart_item = CartItem.objects.get(pk=cart_item_id)
         if cart_item.quantity > 1:
             cart_item.quantity -= 1
