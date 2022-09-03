@@ -3,8 +3,12 @@ from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 
 from accounts.models import Account
+from carts.models import Cart, CartItem
+from carts.views import _cart_id
 
 from .forms import RegistrationForm
+
+import requests
 
 
 def register(request):
@@ -38,12 +42,37 @@ def login(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         user = auth.authenticate(email=email, password=password)
-        if not user:
-            messages.error(request=request, message="Login failed!")
-        else:
+        # If login successful, convert all item cart to user login
+        # if not, sent message login failed
+        if user is not None:
+            try:
+                cart = Cart.objects.get(cart_id=_cart_id(request))
+                cart_items = CartItem.objects.filter(cart_id=cart)
+                for cart_item in cart_items:
+                    try:
+                        added_cart_item = CartItem.objects.get(
+                            product=cart_item.product, user=user)
+                        added_cart_item.quantity += cart_item.quantity
+                        added_cart_item.save()
+                        cart_item.delete()
+                    except Exception as e:
+                        cart_item.user = user
+                        cart_item.save()
+            except Exception as e:
+                pass
             auth.login(request=request, user=user)
             messages.success(request=request, message="Login successful!")
+            url = request.META.get('HTTP_REFERER')
+            try:
+                query = requests.utils.urlparse(url).query
+                params = dict(x.split("=") for x in query.split("&"))
+                if "next" in params:
+                    next_page = params["next"]
+                    return redirect(next_page)
+            except Exception:
+                pass
             return redirect('dashboard')
+        messages.error(request=request, message="Login failed!")
     return render(request, 'accounts/login.html')
 
 
