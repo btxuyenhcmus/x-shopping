@@ -42,13 +42,13 @@ release-latest:
   variables:
     GIT_STRATEGY: none
   stage: release
-  only:
-    - master
   script:
     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
     - docker push $CI_REGISTRY_IMAGE:latest
   only:
+    refs:
+      - master
     changes:
       - Dockerfile
       - requirements.txt
